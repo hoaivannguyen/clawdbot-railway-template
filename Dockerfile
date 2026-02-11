@@ -61,14 +61,16 @@ RUN apt-get update \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
+    xvfb \
   && rm -rf /var/lib/apt/lists/*
 
 # Tell browser automation libs to use the system Chromium (no download needed).
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV CHROME_BIN=/usr/bin/chromium
-# Required for Chromium in Docker: no sandbox (no kernel caps), avoid /dev/shm size limits.
-ENV CHROMIUM_FLAGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --headless"
+# Non-headless mode: Xvfb provides a virtual display so Chromium runs with full GUI rendering.
+ENV DISPLAY=:99
+ENV CHROMIUM_FLAGS="--no-sandbox --disable-dev-shm-usage --disable-gpu"
 ENV PUPPETEER_CHROMIUM_REVISION=skip
 
 # `openclaw update` expects pnpm. Provide it in the runtime image.
@@ -93,4 +95,4 @@ COPY src ./src
 ENV OPENCLAW_PUBLIC_PORT=8080
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 -nolisten tcp & sleep 1 && node src/server.js"]
