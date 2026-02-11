@@ -633,6 +633,14 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
     await runCmd(OPENCLAW_NODE, clawArgs(["config", "set", "gateway.remote.token", OPENCLAW_GATEWAY_TOKEN]));
     await runCmd(OPENCLAW_NODE, clawArgs(["config", "set", "gateway.bind", "loopback"]));
     await runCmd(OPENCLAW_NODE, clawArgs(["config", "set", "gateway.port", String(INTERNAL_GATEWAY_PORT)]));
+    await runCmd(OPENCLAW_NODE, clawArgs(["config", "set", "gateway.trustedProxies", "loopback"]));
+
+    // Tell the gateway the externally-reachable URL so device-pair works behind the proxy.
+    const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+    if (publicDomain) {
+      const publicUrl = `https://${publicDomain}`;
+      await runCmd(OPENCLAW_NODE, clawArgs(["config", "set", "plugins.entries.device-pair.config.publicUrl", publicUrl]));
+    }
 
     // Optional: configure a custom OpenAI-compatible provider (base URL) for advanced users.
     if (payload.customProviderId?.trim() && payload.customProviderBaseUrl?.trim()) {
